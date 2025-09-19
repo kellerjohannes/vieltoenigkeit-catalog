@@ -144,3 +144,10 @@
   (compile-2-constellation-group "c001" :terza-minore :tono :up :quinta :down :ottava)
   (compile-2-constellation-group "c002" :terza-maggiore :tono :up :semitono-maggiore :down :quinta)
   (compile-2-constellation-group "c003" :terza-minore :tono :up :tono :down :quinta))
+
+
+
+;;; Lilypond handling
+
+
+;;; Document generation
