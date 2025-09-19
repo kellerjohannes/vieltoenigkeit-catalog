@@ -1,0 +1,46 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage{mathabx}
+\usepackage{stackengine}
+\usetikzlibrary{backgrounds}
+\usepackage{newunicodechar}
+\newunicodechar{♮}{$\natural$}
+\newunicodechar{♭}{$\flat$}
+\newunicodechar{♯}{$\sharp$}
+\newunicodechar{➚}{$\nearrow$}
+\newunicodechar{➘}{$\searrow$}
+\newunicodechar{ʼ}{'}
+\newunicodechar{Ả}{\stackon[0.8pt]{A}{,}}
+\newunicodechar{Ɓ}{\stackon[0.8pt]{B}{,}}
+\newunicodechar{Ƈ}{\stackon[0.8pt]{C}{,}}
+\newunicodechar{Ɗ}{\stackon[0.8pt]{D}{,}}
+\newunicodechar{Ẻ}{\stackon[0.8pt]{E}{,}}
+\newunicodechar{Ƒ}{\stackon[0.8pt]{F}{,}}
+\newunicodechar{Ɠ}{\stackon[0.8pt]{G}{,}}
+\newunicodechar{Ȧ}{\stackon[0.8pt]{A}{.}}
+\newunicodechar{Ḃ}{\stackon[0.8pt]{B}{.}}
+\newunicodechar{Ċ}{\stackon[0.8pt]{C}{.}}
+\newunicodechar{Ḋ}{\stackon[0.8pt]{D}{.}}
+\newunicodechar{Ė}{\stackon[0.8pt]{E}{.}}
+\newunicodechar{Ḟ}{\stackon[0.8pt]{F}{.}}
+\newunicodechar{Ġ}{\stackon[0.8pt]{G}{.}}
+
+
+\def\centerarc[#1](#2)(#3:#4:#5);%
+{
+  \draw[#1]([shift=(#3:#5)]#2) arc (#3:#4:#5);
+}
+
+
+\begin{document}
+\begin{tikzpicture}
+
+\draw[thick] (0.0,0.0) -- (4.0,5.572456);
+\node[align=center] at (2.2112176, 2.6346128) { \rotatebox{54.328594769903084}{\large quinta} };
+\draw[thick] (0.0,9.599702) -- (4.0,8.054494);
+\node[align=center] at (2.0936909, 9.069631) { \rotatebox{-21.121645418695266}{\large tono} };
+\draw[dotted] (0.0,0.0) -- (0.0,9.599702);
+\node[align=center] at (-0.32000002, 4.799851) { \rotatebox{90.0}{\large ottava} };
+\draw[dotted] (4.0,5.572456) -- (4.0,8.054496);
+\node[align=center] at (4.32, 6.813476) { \rotatebox{90.0}{\large terza minore} };
+\end{tikzpicture}
+\end{document}
