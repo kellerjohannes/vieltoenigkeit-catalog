@@ -149,5 +149,50 @@
 
 ;;; Lilypond handling
 
+(defun generate-ly-code (clef1 notes1 clef2 notes2)
+  (format nil "
+\\version \"2.24.2\"
+
+#(ly:set-option 'crop #t)
+
+\\score {
+  \\new ChoirStaff
+  <<
+    \\new Staff {
+      \\clef \"~a\"
+      ~a
+    }
+    \\new Staff {
+      \\clef \"~a\"
+      ~a
+    }
+  >>
+}
+
+"
+          clef1
+          notes1
+          clef2
+          notes2
+          )
+  )
+
+(defun compile-lilypond (filename clef1 notes1 clef2 notes2)
+  (let ((full-path (merge-pathnames (format nil "ly/~a.ly" filename)
+                                    (asdf/system:system-source-directory :vieltoenigkeit))))
+    (with-open-file (ly-file full-path
+                             :direction :output
+                             :if-does-not-exist :create
+                             :if-exists :supersede)
+      (format ly-file "~a" (generate-ly-code clef1 notes1 clef2 notes2)))
+    (uiop:run-program (list "/usr/bin/lilypond"
+                            "-o"
+                            (namestring (make-pathname :directory (pathname-directory full-path)))
+                            (namestring full-path)))))
+
+
+(compile-lilypond "test" "treble" "d'2 e' f' g \\bar \"|.\"" "treble" "f2 g a b ")
+
+
 
 ;;; Document generation
