@@ -17,6 +17,8 @@
    (make-dict-entry :terza-maggiore :f :a "terza maggiore")
    (make-dict-entry :quarta :d :g "quarta")
    (make-dict-entry :quinta :d :a "quinta")
+   (make-dict-entry :sesta-minore :e :c "sesta minore")
+   (make-dict-entry :sesta-maggiore :c :a "sesta maggiore")
    (make-dict-entry :ottava :d :d "ottava")
    (make-dict-entry :decima :c :e "decima" 1)))
 
@@ -140,10 +142,6 @@
                              cons2 step2 dir2 step1 dir1 cons1)))
 
 
-(progn
-  (compile-2-constellation-group "c001" :terza-minore :tono :up :quinta :down :ottava)
-  (compile-2-constellation-group "c002" :terza-maggiore :tono :up :semitono-maggiore :down :quinta)
-  (compile-2-constellation-group "c003" :terza-minore :tono :up :tono :down :quinta))
 
 
 
@@ -192,6 +190,12 @@
 
 
 (compile-lilypond "test" "treble" "d'2 e' f' g \\bar \"|.\"" "treble" "f2 g a b ")
+
+(compile-2-constellation-group "c001" :terza-minore :tono :up :quinta :down :ottava)
+(compile-2-constellation-group "c002" :terza-maggiore :tono :up :semitono-maggiore :down :quinta)
+(compile-2-constellation-group "c003" :unisono :tono :up :tono :down :terza-maggiore)
+(compile-2-constellation-group "c004" :terza-minore :tono :up :tono :down :quinta)
+(compile-2-constellation-group "c005" :sesta-minore :tono :up :tono :down :ottava)
 
 
 

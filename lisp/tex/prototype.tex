@@ -1,0 +1,86 @@
+\documentclass[a4paper,DIV=17,11pt,headings=standardclasses]{scrartcl}
+%\usepackage{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{longtable}
+
+
+
+\usepackage{newunicodechar}
+\newunicodechar{♭}{$\flat$}
+\newunicodechar{♯}{$\sharp$}
+\newunicodechar{♮}{$\natural$}
+
+\def\fourLine#1{%
+\begin{longtable}{p{0.25\linewidth}p{0.25\linewidth}p{0.25\linewidth}p{0.25\linewidth}}
+  \includegraphics[scale=0.5]{../tikz/#1-a.pdf} &
+  \includegraphics[scale=0.5]{../tikz/#1-b.pdf} &
+  \includegraphics[scale=0.5]{../tikz/#1-c.pdf} &
+  \includegraphics[scale=0.5]{../tikz/#1-d.pdf} \\
+\end{longtable}
+}
+
+\def\twoLine#1{%
+\begin{longtable}{p{0.25\linewidth}p{0.25\linewidth}p{0.25\linewidth}p{0.25\linewidth}}
+  \includegraphics[scale=0.5]{../tikz/#1-a.pdf} &
+  \includegraphics[scale=0.5]{../tikz/#1-b.pdf} &
+\end{longtable}
+}
+
+
+
+\begin{document}
+\hspace{1cm}
+\vspace{2cm}
+
+\thispagestyle{empty}
+\begin{center}
+  {\huge Vieltönigkeit -- The Catalogue}\\[1ex]
+  \textit{\today}
+\end{center}
+
+\vfill
+
+\hrule
+
+\tableofcontents
+
+\newpage
+
+\section{Terminology}
+\begin{description}
+\item[incitato] A \textit{natura} of an interval. Going from a softer note or hexachord syllable to a harder note.
+\item[molle] A \textit{natura} of an interval. Going from a harder note or hexachord syllable to a softer one.
+\item[natura] A property of an interval, usually either \textit{incitato} or \textit{molle}. If an intervall is \textit{incitato} in ascending direction, it will be \textit{molle} descending, and vice versa.
+\item[ordine naturale] Notes found in the usual Gamut: A, ♮B, ♭B, C, D, E, F and G. Also called \enquote{mano naturale}, as in \enquote{the Guidonian hand}. These are the pitches that can be named using the three usual hexachords: the natural hexachord on C, the soft one on F and the hard one on G.
+\item[quarta] Fourth. \textit{Incitato} ascending, \textit{molle} descending. Example: D-G, F-♭B, ♯C-♯F.
+\item[quinta] Fifth. \textit{Incitato} ascending, \textit{molle} descending. Example: D-A, ♯G-♯D, ♭A-♭E.
+\item[semitono maggiore] Minor second, diatonic semitone, leading note, \enquote{mi-fa}. \textit{Molle} ascending, \textit{incitato} descending. Example: E-F, ♯G-A, D-♭E, ♯E-♯F.
+\item[semitono minore] Augmented prime, chromatic semitone. \textit{Incitato} ascending, \textit{molle} descending. Example: C-♯C, ♭A-A.
+\item[terza minore] Minor third. \textit{Molle} ascending, \textit{incitato} descending. Example: D-F, ♯F-A, F-♭A.
+\item[terza maggiore] Major third. \textit{Incitato} ascending, \textit{molle} descending. Example: C-E, A-♯C, ♭D-F.
+\item[tono] Major second, whole step. \textit{Incitato} ascending, \textit{molle} descending. Example: D-E, ♯F-♯G, ♭D-♭E.
+\end{description}
+
+
+\pagebreak
+
+\section{Two-part voiceleadings}
+\subsection{\textit{Tono} and \textit{quinta}}
+\fourLine{c001}
+
+\subsection{\textit{Tono} and \textit{semitono maggiore}}
+\fourLine{c002}
+
+\subsection{\textit{Tono} and \textit{tono}}
+\twoLine{c003}
+\twoLine{c004}
+\twoLine{c005}
+
+
+
+
+\end{document}
