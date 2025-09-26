@@ -1,10 +1,11 @@
 (in-package :vieltoenigkeit)
 
-(defparameter *mei* (with-open-file (xml-stream "xml/01-mei.xml")
-                      (xmls:parse xml-stream)))
-
 
 ;;; MEI/XML handling
+
+(defun parse-mei (mei-filename)
+  (with-open-file (mei-stream mei-filename)
+    (xmls:parse mei-stream)))
 
 (defun follow-path (mei-data name-strings)
   (if (null name-strings)
@@ -97,11 +98,19 @@
 (defun lookup-dur (dur-string)
   (cdr (assoc dur-string *dur-dict* :test #'string=)))
 
+(defun make-note-name-keyword (note-expression)
+  (alexandria:make-keyword
+   (if (and (string= (second note-expression) "b")
+            (null (third note-expression)))
+       "B♮"
+       (format nil
+               "~a~@[~a~]"
+               (string-upcase (second note-expression))
+               (lookup-accid (third note-expression))))))
+
 (defun translate-note (note-expression)
-  (list :note (alexandria:make-keyword (format nil
-                                               "~a~@[~a~]"
-                                               (string-upcase (second note-expression))
-                                               (lookup-accid (third note-expression))))
+  (list :note
+        (make-note-name-keyword note-expression)
         (parse-integer (fourth note-expression))
         (lookup-dur (fifth note-expression))))
 
@@ -130,22 +139,95 @@
 ;; e b d c♯ c
 
 (defparameter *relative-intervals-dict*
-  '((:quinta ((:c :g 0) (:d :a 0) (:e :b♮ 0)
-              (:f :c 1) (:g :d 1) (:a :e 1) (:b♭ :f 1) (:b♮ :f♯ 1)))))
+  '((:unisono ((:c :c) (:d :d) (:e :e) (:f :f) (:g :g) (:a :a) (:b♮ :b♮) (:b♭ :b♭)
+               (:c♯ :c♯) (:e♭ :e♭) (:f♯ :f♯) (:g♯ :g♯) (:b♮ :b♮) (:b♭ :b♭)
+               (:d♭ :d♭) (:d♯ :d♯) (:e♯ :e♯) (:g♭ :g♭) (:a♭ :a♭) (:a♯ :a♯)))
+    (:diesis ((:c♯ :d♭) (:f♯ :g♭) (:g♯ :a♭)
+              (:d♯ :e♭) (:e♯ :f) (:a♯ :b♭) (:b♯ :c 1)))
+    (:semitono-minore ((:c :c♯) (:d :d♯) (:e :e♯) (:f :f♯) (:g :g♯) (:a :a♯) (:b♮ :b♯) (:b♭ :b♮)
+                       (:e♭ :e) (:b♭ :b♮)
+                       (:d♭ :d) (:g♭ :g) (:a♭ :a)))
+    (:semitono-maggiore ((:c :d♭) (:d :e♭) (:e :f) (:f :g♭) (:g :a♭) (:a :b♭) (:b♭ :c♭ 1)
+                         (:b♮ :c 1)
+                         (:c♯ :d) (:e♭ :f♭) (:f♯ :g) (:g♯ :a)
+                         (:d♯ :e) (:e♯ :f♯) (:a♯ :b♮)))
+    (:tono ((:c :d) (:d :e) (:e :f♯) (:f :g) (:g :a) (:a :b♮) (:b♮ :c♯ 1) (:b♭ :c 1)
+            (:c♯ :d♯) (:e♭ :f) (:f♯ :g♯) (:g♯ :a♯)
+            (:d♭ :e♭) (:d♯ :e♯) (:g♭ :a♭) (:a♭ :b♭) (:a♯ :b♯)))
+    (:tono-maggiore ((:c♯ :e♭) (:f♯ :a♭) (:g♯ :b♭) (:b♮ :d♭ 1)
+                     (:d♯ :f) (:a♯ :c 1)))
+    (:terza-minima ((:c :d♯) (:d :e♯) (:f :g♯) (:g :a♯) (:a :b♯) (:b♭ :c♯ 1)
+                    (:e♭ :f♯)
+                    (:d♭ :e) (:g♭ :a) (:a♭ :b♮)))
+    (:terza-minore ((:c :e♭) (:d :f) (:e :g) (:f :a♭) (:g :b♭) (:a :c 1) (:b♮ :d 1) (:b♭ :d♭ 1)
+                    (:c♯ :e) (:e♭ :g♭) (:f♯ :a) (:g♯ :b♮)
+                    (:d♭ :f♭) (:d♯ :f♯) (:e♯ :g♯) (:a♭ :c♭) (:a♯ :c♯ 1)))
+    (:terza-maggiore ((:c :e) (:d :f♯) (:e :g♯) (:f :a) (:g :b♮) (:a :c♯ 1) (:b♮ :d♯ 1) (:b♭ :d 1)
+                      (:c♯ :e♯) (:e♭ :g) (:f♯ :a♯) (:g♯ :b♯)
+                      (:d♭ :f) (:g♭ :b♭) (:a♭ :c 1)))
+    (:terza-maggiore-propinqua ((:c :f♭) (:d :g♭) (:e :a♭) (:g :c♭ 1) (:a :d♭ 1) (:b♮ :e♭ 1)))
+    (:quarta ((:c :f) (:d :g) (:e :a) (:f :b♭) (:g :c 1) (:a :d 1) (:b♮ :e 1) (:b♭ :e♭ 1)
+              (:c♯ :f♯) (:e♭ :a♭) (:f♯ :b♮) (:g♯ :c♯ 1)))
+    (:tritono ((:c :f♯) (:d :g♯) (:e :a♯) (:f :b♮) (:g :c♯ 1) (:a :d♯ 1) (:b♮ :e♯ 1) (:b♭ :e 1)))
+    (:quinta-imperfetta ((:c :g♭) (:d :a♭) (:e :b♭) (:f :c♭ 1) (:g :d♭ 1) (:a :e♭) (:b♮ :f 1)
+                         (:b♭ :f♭ 1)
+                         (:c♯ :g) (:f♯ :c 1) (:g♯ :d 1)))
+    (:quinta ((:c :g) (:d :a) (:e :b♮)
+              (:f :c 1) (:g :d 1) (:a :e 1) (:b♭ :f 1) (:b♮ :f♯ 1)))
+    (:sesta-minore ((:c :a♭) (:d :b♭) (:e :c 1) (:f :d♭ 1) (:g :e♭ 1) (:a :f 1)
+                    (:b♮ :g 1) (:b♭ :g♭ 1)))
+    (:sesta-maggiore ((:c :a) (:d :b♮) (:e :c♯ 1) (:f :d 1) (:g :e 1) (:a :f♯ 1) (:b♮ :g♯ 1)
+                      (:b♭ :g 1)))
+    (:settima-minore ((:c :b♭) (:d :c 1) (:e :d 1) (:f :e♭ 1) (:g :f 1) (:a :g 1) (:b♮ :a 1)
+                      (:b♭ :a♭ 1)
+                      (:c♯ :b♮) (:e♭ :d♭ 1) (:f♯ :e 1) (:g♯ :f♯ 1)))))
+
+(defmacro toward-zero (num)
+  `(setf ,num (- ,num (signum ,num))))
 
 (defun lookup-relative-interval (origin target)
   (block search
-    (let ((search-pattern (list (second origin)
-                                (second target)
-                                (- (third target) (third origin)))))
-      (dolist (interval *relative-intervals-dict*)
-        (dolist (pattern (second interval))
-          (when (equalp pattern search-pattern)
-            (return-from search (list (first interval) :➚)))
-          (when (equalp pattern (list (second search-pattern)
-                                      (first search-pattern)
-                                      (- (third search-pattern))))
-            (return-from search (list (first interval) :➘))))))))
+    (loop for i from (abs (- (third target) (third origin))) to 0
+          for octave-delta = (- (third target) (third origin))
+          for multiplier from 0
+          do (let ((search-pattern (list (second origin)
+                                         (second target)
+                                         octave-delta)))
+               (dolist (interval *relative-intervals-dict*)
+                 (dolist (pattern (second interval))
+                   (let ((complete-pattern (if (third pattern)
+                                               pattern
+                                               (list (first pattern) (second pattern) 0))))
+                     (when (equalp complete-pattern search-pattern)
+                       (return-from search (list (first interval) :➚)))
+                     (when (equalp complete-pattern (list (second search-pattern)
+                                                          (first search-pattern)
+                                                          (- (third search-pattern))))
+                       (return-from search (list (first interval) :➘ multiplier)))))))
+             (toward-zero octave-delta))
+    (error "Interval between ~a and ~a not known." origin target)))
+
+(defun lookup-relative-interval (origin target)
+  (block search
+    (do ((i (abs (- (third target) (third origin))) (1- i))
+         (octave-delta (- (third target) (third origin)) (toward-zero octave-delta))
+         (multiplier 0 (1+ multiplier)))
+        ((minusp i) (error "Interval between ~a and ~a not known." origin target))
+      (let ((search-pattern (list (second origin)
+                                  (second target)
+                                  octave-delta)))
+        ;; (format t "~&Round 1, i=~a, octave-delta=~a, multiplier=~a." i octave-delta multiplier)
+        (dolist (interval *relative-intervals-dict*)
+          (dolist (pattern (second interval))
+            (let ((complete-pattern (if (third pattern)
+                                        pattern
+                                        (list (first pattern) (second pattern) 0))))
+              (when (equalp complete-pattern search-pattern)
+                (return-from search (list (first interval) :➚ multiplier)))
+              (when (equalp complete-pattern (list (second search-pattern)
+                                                   (first search-pattern)
+                                                   (- (third search-pattern))))
+                (return-from search (list (first interval) :➘ multiplier))))))))))
 
 (defun add-to-interval-path (origin-note new-note)
   (case (first new-note)
@@ -154,7 +236,7 @@
                          (lookup-relative-interval origin-note new-note))
                  (list :s (fourth new-note))))))
 
-(defun converto-to-relative (score-expression origin-note)
+(defun convert-to-relative (score-expression origin-note)
   (let ((origin origin-note))
     (list (first score-expression)
           (list :music
@@ -168,3 +250,56 @@
                                          (setf origin note-or-rest))))
                                                       (rest voice))))
                         (second (second score-expression)))))))
+
+
+(defun relative-score (mei-file-name)
+  (convert-to-relative (translate-pitch-info (read-mei (parse-mei mei-file-name)))
+                       '(:note :c 3)))
+
+
+(defparameter *score-1* (relative-score "xml/01-mei.xml"))
+
+
+
+
+(defparameter *test* (make-hash-table :test #'equal))
+
+
+;;; Doing simple statistics
+
+(defun add-interval (counter note)
+  (setf (getf )))
+
+(defun interval-stats (relative-score &key (sounding-filter nil))
+  ;; TODO read metadata
+  (let ((counter (make-hash-table :test #'equal))
+        (soundingp nil))
+    (dolist (voice (second (second relative-score)))
+      (dolist (note-or-rest (rest voice))
+        (when (eq :s (first note-or-rest)) (setf soundingp t))
+        (when (eq :t (first note-or-rest)) (setf soundingp nil))
+        (when (eq :i (first note-or-rest))
+          (unless (gethash (rest note-or-rest) counter)
+            (setf (gethash (rest note-or-rest) counter) 0))
+          (if sounding-filter
+              (when soundingp (incf (gethash (rest note-or-rest) counter)))
+              (incf (gethash (rest note-or-rest) counter))))))
+    counter))
+
+(defun print-interval-stats (relative-score)
+  (dolist (entry (sort (loop for interval being the hash-keys of (interval-stats relative-score :sounding-filter t)
+                               using (hash-value number)
+                             collect (cons interval number))
+                       #'>
+                       :key #'cdr))
+    (unless (eq :unisono (first (car entry)))
+      (format t
+              "~&~a: ~a ~a ~@[(x~a)~]"
+              (cdr entry)
+              (first (car entry))
+              (second (car entry))
+              (when (plusp (third (car entry)))
+                (third (car entry)))))))
+
+
+(print-interval-stats *score-1*)
