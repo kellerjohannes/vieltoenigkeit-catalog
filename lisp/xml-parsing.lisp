@@ -130,12 +130,22 @@
 ;; e b d c♯ c
 
 (defparameter *relative-intervals-dict*
-  '(((:e :b) ((0 (:quinta :➚ 0))
-              (1 (:duodecii :➚))))))
+  '((:quinta ((:c :g 0) (:d :a 0) (:e :b♮ 0)
+              (:f :c 1) (:g :d 1) (:a :e 1) (:b♭ :f 1) (:b♮ :f♯ 1)))))
 
 (defun lookup-relative-interval (origin target)
-  (let ((octave-delta (- (third target) (third origin))))
-    ))
+  (block search
+    (let ((search-pattern (list (second origin)
+                                (second target)
+                                (- (third target) (third origin)))))
+      (dolist (interval *relative-intervals-dict*)
+        (dolist (pattern (second interval))
+          (when (equalp pattern search-pattern)
+            (return-from search (list (first interval) :➚)))
+          (when (equalp pattern (list (second search-pattern)
+                                      (first search-pattern)
+                                      (- (third search-pattern))))
+            (return-from search (list (first interval) :➘))))))))
 
 (defun add-to-interval-path (origin-note new-note)
   (case (first new-note)
