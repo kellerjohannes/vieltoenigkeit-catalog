@@ -89,7 +89,7 @@
   (cdr (assoc accid-string *accid-dict* :test #'string=)))
 
 (defparameter *dur-dict* '(("breve" . :brevis)
-                           ("1" . :semibreivs)
+                           ("1" . :semibrevis)
                            ("2" . :minima)
                            ("4" . :semiminima)
                            ("8" . :fusa)
@@ -260,6 +260,76 @@
 (defparameter *score-1* (relative-score "xml/01-mei.xml"))
 
 
+;;; Drawing scores
+
+(defparameter *duration-dict* '((:brevis . 2)
+                                (:semibrevis . 1)
+                                (:minima . 1/2)
+                                (:semiminima . 1/4)
+                                (:fusa . 1/8)
+                                (:semifusa . 1/16)))
+
+(defun lookup-duration (duration)
+  (cdr (assoc duration *duration-dict*)))
+
+(defparameter *interval-size-dict*
+  `((:unisono . 0)
+    (:diesis . ,(vicentino-tunings:interval-size :tuning1 :d♯ :up :e♭))
+    (:semitono-minore . ,(vicentino-tunings:interval-size :tuning1 :c :up :c♯))
+    (:semitono-maggiore . ,(vicentino-tunings:interval-size :tuning1 :e :up :f))
+    (:tono . ,(vicentino-tunings:interval-size :tuning1 :c :up :d))
+    (:tono-maggiore . ,(vicentino-tunings:interval-size :tuning1 :c♯ :up :e♭))
+    (:terza-minima . ,(vicentino-tunings:interval-size :tuning1 :c :up :d♯))
+    (:terza-minore . ,(vicentino-tunings:interval-size :tuning1 :d :up :f))
+    (:terza-maggiore . ,(vicentino-tunings:interval-size :tuning1 :c :up :e))
+    (:terza-maggiore-propinqua . ,(vicentino-tunings:interval-size :tuning1 :e :up :a♭))
+    (:quarta . ,(vicentino-tunings:interval-size :tuning1 :c :up :f))
+    (:tritono . ,(vicentino-tunings:interval-size :tuning1 :c :up :f♯))
+    (:quinta-imperfetta . ,(vicentino-tunings:interval-size :tuning1 :d :up :a♭))
+    (:quinta . ,(vicentino-tunings:interval-size :tuning1 :d :up :a))
+    (:sesta-minore . ,(vicentino-tunings:interval-size :tuning1 :d :up :b♭))
+    (:sesta-maggiore . ,(vicentino-tunings:interval-size :tuning1 :c :up :a))
+    (:settima-minore . ,(vicentino-tunings:interval-size :tuning1 :c :up :b♭))))
+
+(defun lookup-interval-size (interval-name direction)
+  (* (if (eq :➚ direction) 1 -1)
+     (cdr (assoc interval-name *interval-size-dict*))))
+
+(defun draw-voice (voice-data &key (x-scale 5) (y-scale 1/20))
+  (let ((time-cursor 0)
+        (pitch-cursor 0))
+    (remove-if #'null
+               (mapcar (lambda (item)
+                         (case (first item)
+                           (:t (incf time-cursor (lookup-duration (second item))) nil)
+                           (:s (ln (pt (* x-scale time-cursor)
+                                       (* y-scale pitch-cursor))
+                                   (pt (* x-scale
+                                          (incf time-cursor (lookup-duration (second item))))
+                                       (* y-scale pitch-cursor))
+                                   :style-update '(:line-type :thick)))
+                           (:i (ln (pt (* x-scale time-cursor)
+                                       (* y-scale pitch-cursor))
+                                   (pt (* x-scale time-cursor)
+                                       (* y-scale
+                                          (incf pitch-cursor (lookup-interval-size (second item)
+                                                                                   (third item)))))
+                                   :style-update '(:line-type :dotted)))))
+                       (rest voice-data)))))
+
+
+(defun draw-pitch-score (relative-score)
+  (let ((btikz (drawer:make-backend-tikz
+                :filename "01-pitch-score.tex"
+                :path (merge-pathnames "tikz/"
+                                       (asdf/system:system-source-directory :vieltoenigkeit))))
+        (voices (gr (mapcar (lambda (voice)
+                              (gr (draw-voice voice)))
+                            (second (second relative-score))))))
+        (drawer:draw-with-multiple-backends (list btikz) (list voices))
+    (drawer:compile-tikz btikz
+                         (merge-pathnames "tikz/"
+                                          (asdf/system:system-source-directory :vieltoenigkeit)))))
 
 
 (defparameter *test* (make-hash-table :test #'equal))
