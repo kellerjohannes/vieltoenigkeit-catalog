@@ -295,37 +295,87 @@
   (* (if (eq :➚ direction) 1 -1)
      (cdr (assoc interval-name *interval-size-dict*))))
 
-(defun draw-voice (voice-data &key (x-scale 5) (y-scale 1/20))
-  (let ((time-cursor 0)
-        (pitch-cursor 0))
-    (remove-if #'null
-               (mapcar (lambda (item)
-                         (case (first item)
-                           (:t (incf time-cursor (lookup-duration (second item))) nil)
-                           (:s (ln (pt (* x-scale time-cursor)
-                                       (* y-scale pitch-cursor))
-                                   (pt (* x-scale
-                                          (incf time-cursor (lookup-duration (second item))))
-                                       (* y-scale pitch-cursor))
-                                   :style-update '(:line-type :thick)))
-                           (:i (ln (pt (* x-scale time-cursor)
-                                       (* y-scale pitch-cursor))
-                                   (pt (* x-scale time-cursor)
-                                       (* y-scale
-                                          (incf pitch-cursor (lookup-interval-size (second item)
-                                                                                   (third item)))))
-                                   :style-update '(:line-type :dotted)))))
-                       (rest voice-data)))))
+(defparameter *interval-fifth-index*
+  `((:unisono . 0)
+    (:diesis . 12)
+    (:semitono-minore . 7)
+    (:semitono-maggiore . -5)
+    (:tono . 2)
+    (:tono-maggiore . -10) ; really?
+    (:terza-minima . 9) ; really?
+    (:terza-minore . -3)
+    (:terza-maggiore . 4)
+    (:terza-maggiore-propinqua . -8) ; really?
+    (:quarta . -1)
+    (:tritono . 6)
+    (:quinta-imperfetta . -6)
+    (:quinta . 1)
+    (:sesta-minore . -4)
+    (:sesta-maggiore . 3)
+    (:settima-minore . 2)))
 
 
-(defun draw-pitch-score (relative-score)
+(defun lookup-fifth-index (interval-name direction)
+  (* (if (eq :➚ direction) 1 -1)
+     (cdr (assoc interval-name *interval-fifth-index*))))
+
+(defun calculate-score-duration (voice-data)
+  (reduce #'+ (remove-if #'null (mapcar (lambda (item)
+                                          (case (first item)
+                                            (:s (lookup-duration (second item)))
+                                            (:t (lookup-duration (second item)))))
+                                        (rest voice-data)))))
+
+(defun draw-voice (voice-data pitch-fun x-scale y-scale origin-note)
+  (format t "~&voice dur: ~a." (calculate-score-duration voice-data))
+  (gr (list (let ((y (funcall pitch-fun (first origin-note) (second origin-note))))
+              (ln (pt 0 y) (pt (* x-scale (calculate-score-duration voice-data)) y)
+                  :style-update '(:line-type :dotted)))
+            (gr (let ((time-cursor 0)
+                      (pitch-cursor 0))
+                  (remove-if #'null
+                             (mapcar (lambda (item)
+                                       (case (first item)
+                                         (:t (incf time-cursor
+                                                   (lookup-duration (second item)))
+                                          nil)
+                                         (:s (ln (pt (* x-scale time-cursor)
+                                                     (* y-scale pitch-cursor))
+                                                 (pt (* x-scale
+                                                        (incf time-cursor
+                                                              (lookup-duration (second item))))
+                                                     (* y-scale pitch-cursor))
+                                                 :style-update '(:line-type :thick)))
+                                         (:i (ln (pt (* x-scale time-cursor)
+                                                     (* y-scale pitch-cursor))
+                                                 (pt (* x-scale time-cursor)
+                                                     (* y-scale
+                                                        (incf pitch-cursor
+                                                              (funcall pitch-fun
+                                                                       (second item)
+                                                                       (third item)))))
+                                                 :style-update '(:line-type :thin)))))
+                                     (rest voice-data))))))))
+
+(defun draw-score (relative-score filename
+                   &key voice-label-filter (pitch-fun #'lookup-interval-size)
+                     (x-scale 1) (y-scale 1/5) (origin-note '(:unisono :➚)) (y-padding 20))
   (let ((btikz (drawer:make-backend-tikz
-                :filename "01-pitch-score.tex"
+                :filename (format nil "~a.tex" filename)
                 :path (merge-pathnames "tikz/"
                                        (asdf/system:system-source-directory :vieltoenigkeit))))
-        (voices (gr (mapcar (lambda (voice)
-                              (gr (draw-voice voice)))
-                            (second (second relative-score))))))
+        (voices (gr (let ((v-counter -1))
+                      (mapcar (lambda (voice)
+                                (cp voice (pt 0 0) (pt 0 (* (- (incf v-counter))
+                                                            y-padding))))
+                              (remove-if #'null
+                                         (mapcar (lambda (voice)
+                                                   (if voice-label-filter
+                                                       (when (member (first voice) voice-label-filter
+                                                                     :test #'string=)
+                                                         (draw-voice voice pitch-fun x-scale y-scale origin-note))
+                                                       (draw-voice voice pitch-fun x-scale y-scale origin-note)))
+                                                 (second (second relative-score)))))))))
         (drawer:draw-with-multiple-backends (list btikz) (list voices))
     (drawer:compile-tikz btikz
                          (merge-pathnames "tikz/"
@@ -336,9 +386,6 @@
 
 
 ;;; Doing simple statistics
-
-(defun add-interval (counter note)
-  (setf (getf )))
 
 (defun interval-stats (relative-score &key (sounding-filter nil))
   ;; TODO read metadata
